@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: sms-service
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        namespace: e680fa87-33bd-4c1d-8df0-e7620049915c
+        group: dev
+        file-extension: yml # 去找yml后缀文件，如果不写默认找properties后缀文件
