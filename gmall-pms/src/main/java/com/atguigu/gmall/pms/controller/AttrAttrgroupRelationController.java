@@ -1,12 +1,14 @@
 package com.atguigu.gmall.pms.controller;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 
 import com.atguigu.core.bean.PageVo;
 import com.atguigu.core.bean.QueryCondition;
 import com.atguigu.core.bean.Resp;
+
+import com.atguigu.gmall.pms.service.AttrAttrgroupRelationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +16,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gmall.pms.entity.AttrAttrgroupRelationEntity;
-import com.atguigu.gmall.pms.service.AttrAttrgroupRelationService;
-
-
 
 
 /**
  * 属性&属性分组关联
  *
- * @author lixianfeng
- * @email lxf@atguigu.com
- * @date 2019-12-31 16:30:50
+ * @author zhangjialing
+ * @email zjl@atguigu.com
+ * @date 2020-01-01 14:00:29
  */
 @Api(tags = "属性&属性分组关联 管理")
 @RestController
@@ -32,6 +31,15 @@ import com.atguigu.gmall.pms.service.AttrAttrgroupRelationService;
 public class AttrAttrgroupRelationController {
     @Autowired
     private AttrAttrgroupRelationService attrAttrgroupRelationService;
+
+
+    //自己写的代码开始
+    @PostMapping("delete/attr")
+    public Resp<String> delete(@RequestBody List<AttrAttrgroupRelationEntity> relationEntities){
+        attrAttrgroupRelationService.delete(relationEntities);
+        return Resp.ok("删除成功");
+    }
+    //自己写的代码结束
 
     /**
      * 列表

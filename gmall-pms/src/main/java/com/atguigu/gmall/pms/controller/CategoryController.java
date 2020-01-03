@@ -1,6 +1,7 @@
 package com.atguigu.gmall.pms.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,6 +33,26 @@ import com.atguigu.gmall.pms.service.CategoryService;
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
+
+    @GetMapping
+    public Resp<List<CategoryEntity>> queryCategory(
+            @RequestParam(value = "level",defaultValue = "0")Integer level,
+            @RequestParam(value = "parentCid",required = false)Long parentCid
+    ){
+        /**
+         *
+         * 功能描述: 商品分类功能
+         *
+         * @param: [level, parentCid]
+         * @return: com.atguigu.core.bean.Resp<java.util.List<com.atguigu.gmall.pms.entity.CategoryEntity>>
+         * @auther: 宋金城
+         * @date: 2020/1/3 15:04
+         */
+        //分类查询方法
+        List<CategoryEntity> categoryEntityList=this.categoryService.queryCategory(level, parentCid);
+        System.out.println("查询分页controller执行成功");
+        return Resp.ok(categoryEntityList);
+    }
 
     /**
      * 列表

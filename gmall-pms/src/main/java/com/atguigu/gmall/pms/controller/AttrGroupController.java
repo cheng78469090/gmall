@@ -7,6 +7,7 @@ import java.util.Map;
 import com.atguigu.core.bean.PageVo;
 import com.atguigu.core.bean.QueryCondition;
 import com.atguigu.core.bean.Resp;
+import com.atguigu.gmall.pms.Vo.AttrGroupVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,33 @@ import com.atguigu.gmall.pms.service.AttrGroupService;
 public class AttrGroupController {
     @Autowired
     private AttrGroupService attrGroupService;
+
+    @ApiOperation("根据分组id查询分组及组下的规格参数")
+    @GetMapping("withattr/{gid}")
+    public Resp<AttrGroupVO> queryById(@PathVariable("gid")Long gid){
+       AttrGroupVO attrGroupVO = this.attrGroupService.queryById(gid);
+        return Resp.ok(attrGroupVO);
+    }
+
+
+    @ApiOperation("根据三级分类id分页查询")
+    @GetMapping(value = "{cid}")
+    public Resp<PageVo> queryByCidPage(
+            @PathVariable("cid")Long cid,
+            QueryCondition condition
+    ){
+        /**
+         *
+         * 功能描述: 根据三级分类id分页查询
+         *
+         * @param: [cid, condition]
+         * @return: com.atguigu.core.bean.Resp<com.atguigu.core.bean.PageVo>
+         * @auther: 宋金城
+         * @date: 2020/1/3 16:41
+         */
+        PageVo pageVo=this.attrGroupService.queryByCidPage(cid,condition);
+        return Resp.ok(pageVo);
+    }
 
     /**
      * 列表
