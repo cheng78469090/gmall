@@ -1,6 +1,7 @@
 package com.atguigu.gmall.pms.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
@@ -33,6 +34,19 @@ import com.atguigu.gmall.pms.service.AttrGroupService;
 public class AttrGroupController {
     @Autowired
     private AttrGroupService attrGroupService;
+    /**
+     * 功能描述: 当添加商品的时候，根据用户选择的商品的分类，显示不同的商品参数，使用户添加相应的值
+     * 具体需求：根据分类id查询分组以及组下的属性，生成一个动态表单，提供用户选择
+     * @date: 2020/1/4 16:06
+     */
+    @ApiOperation("根据三级分类id查询分组及组下的规格参数")
+    @GetMapping("/withattrs/cat/{catId}")
+    public Resp<List<AttrGroupVO>> queryByCid(
+            //根据分类id查询所有分组以及组下的属性
+            @PathVariable("catId")Long catId){
+        List<AttrGroupVO> attrGroupVOS=this.attrGroupService.queryByCid(catId);
+        return Resp.ok(attrGroupVOS);
+    }
 
     @ApiOperation("根据分组id查询分组及组下的规格参数")
     @GetMapping("withattr/{gid}")

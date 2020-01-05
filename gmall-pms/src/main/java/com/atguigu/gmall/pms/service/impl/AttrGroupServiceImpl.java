@@ -19,14 +19,15 @@ import com.atguigu.gmall.pms.entity.AttrGroupEntity;
 import com.atguigu.gmall.pms.service.AttrGroupService;
 import org.springframework.util.CollectionUtils;
 
-import javax.management.relation.Relation;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Service("attrGroupService")
 public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEntity> implements AttrGroupService {
+    /**
+     *
+     */
     @Autowired
     private AttrDao attrDao;
     @Autowired
@@ -88,5 +89,17 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
         attrGroupVO.setAttrEntities(attrEntities);
         return attrGroupVO;
     }
+
+    @Override
+    public List<AttrGroupVO> queryByCid(Long catId) {
+        //查询所有分组
+        List<AttrGroupEntity> attrGroupEntitys = this.list(new QueryWrapper<AttrGroupEntity>().eq("catelog_id", catId));
+        //查询分组下的所有规格参数
+        List<AttrGroupVO> attrGroupVOList = attrGroupEntitys.stream().map(attrGroupEntity -> {
+            return this.queryById(attrGroupEntity.getAttrGroupId());
+        }).collect(Collectors.toList());
+        return attrGroupVOList;
+    }
+
 
 }
