@@ -10,9 +10,7 @@ import com.atguigu.gmall.pms.dao.SkuInfoDao;
 import com.atguigu.gmall.pms.dao.SpuInfoDescDao;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.feign.GmallSmsClient;
-import com.atguigu.gmall.pms.service.ProductAttrValueService;
-import com.atguigu.gmall.pms.service.SkuImagesService;
-import com.atguigu.gmall.pms.service.SkuSaleAttrValueService;
+import com.atguigu.gmall.pms.service.*;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,8 @@ import com.atguigu.core.bean.Query;
 import com.atguigu.core.bean.QueryCondition;
 
 import com.atguigu.gmall.pms.dao.SpuInfoDao;
-import com.atguigu.gmall.pms.service.SpuInfoService;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
@@ -51,6 +50,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     private SkuSaleAttrValueService skuSaleAttrValueService;
     @Autowired
     private GmallSmsClient smsClient;
+    @Autowired
+    private SpuInfoDescService spuInfoDescService;
     @Override
     public PageVo queryPage(QueryCondition params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -80,35 +81,24 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageVo(this.page(page,queryWrapper));
     }
 
+    /**
+     * 保存信息方法
+     * @param spuInfoVO
+     */
+    @Transactional
     @Override
     public void saveSuInfoVo(SpuInfoVO spuInfoVO) {
-        System.out.println("保存方法desc");
-        //1.保存spuinfo
-        spuInfoVO.setPublishStatus(1);//默认是已经上架了的
-        spuInfoVO.setCreateTime(new Date());
-        spuInfoVO.setUodateTime(spuInfoVO.getCreateTime());
-        this.save(spuInfoVO);
+        this.saveSpuInfo(spuInfoVO);
         //获取新增后的spuid
-        Long spuInfoVOId = spuInfoVO.getId();
         //保存spu的商品描述信息
-        System.out.println("spuid"+spuInfoVOId);
-        SpuInfoDescEntity spuInfoDescEntity = new SpuInfoDescEntity();
-        spuInfoDescEntity.setSpuId(spuInfoVOId);
-        spuInfoDescEntity.setDecript(StringUtils.join(spuInfoVO.getSpuImages(),","));
-        this.spuInfoDescDao.insert(spuInfoDescEntity);
+        this.spuInfoDescService.saveSpuDesc(spuInfoVO);
         //1.3保存spu的规格参数信息desc信息
-        List<ProductAttrValueVO> baseAttrs = spuInfoVO.getBaseAttrs();
-        if (!CollectionUtils.isEmpty(baseAttrs)){
-            List<ProductAttrValueEntity> productAttrValueEntitie= baseAttrs.stream().map(
-                    productAttrValueVO -> {
-                        productAttrValueVO.setSpuId(spuInfoVOId);
-                        productAttrValueVO.setAttrSort(0);
-                        productAttrValueVO.setQuickShow(0);
-                        return productAttrValueVO;
-                    }
-            ).collect(Collectors.toList());
-            this.productAttrValueService.saveBatch(productAttrValueEntitie);
-        }
+        int a=10/0;
+        this.saveBaseAttrs(spuInfoVO);
+        this.saveSkuInfoWithSaleInfo(spuInfoVO);
+    }
+
+    public void saveSkuInfoWithSaleInfo(SpuInfoVO spuInfoVO) {
         /// 2. 保存sku相关信息
         List<SkuInfoVO> skuInfoVOs = spuInfoVO.getSkus();
         if (CollectionUtils.isEmpty(skuInfoVOs)){
@@ -130,7 +120,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 // 设置第一张图片作为默认图片
                 skuInfoEntity.setSkuDefaultImg(skuInfoEntity.getSkuDefaultImg()==null ? images.get(0) : skuInfoEntity.getSkuDefaultImg());
             }
-            skuInfoEntity.setSpuId(spuInfoVOId);
+            skuInfoEntity.setSpuId(spuInfoVO.getId());
             this.skuInfoDao.insert(skuInfoEntity);
             // 获取skuId
             Long skuId = skuInfoEntity.getSkuId();
@@ -153,13 +143,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             List<SkuSaleAttrValueEntity> saleAttrs = skuInfoVO.getSaleAttrs();
             saleAttrs.forEach(saleAttr -> {
                 // 设置属性名，需要根据id查询AttrEntity
-                //System.out.printf("attrId销售", saleAttr.getAttrId());
-              //  System.out.println(this.attrDao.selectById(saleAttr.getId()).getAttrName());
                 //saleAttr.setAttrName(this.attrDao.selectById(saleAttr.getId()).getAttrName());
                 saleAttr.setAttrSort(0);
                 saleAttr.setSkuId(skuId);
             });
             this.skuSaleAttrValueService.saveBatch(saleAttrs);
+
+
+
+
 
             // 3. 保存营销相关信息，需要远程调用gmall-sms
             // 3.1. 积分优惠
@@ -167,12 +159,38 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             BeanUtils.copyProperties(skuInfoVO, saleVO);
             saleVO.setSkuId(skuId);
             this.smsClient.saveSales(saleVO);
-
-            // 3.2. 满减优惠
-
-            // 3.3. 数量折扣
         });
+    }
 
+    public void saveBaseAttrs(SpuInfoVO spuInfoVO) {
+        List<ProductAttrValueVO> baseAttrs = spuInfoVO.getBaseAttrs();
+        if (!CollectionUtils.isEmpty(baseAttrs)){
+            List<ProductAttrValueEntity> productAttrValueEntitie= baseAttrs.stream().map(
+                    productAttrValueVO -> {
+                        productAttrValueVO.setSpuId(spuInfoVO.getId());
+                        productAttrValueVO.setAttrSort(0);
+                        productAttrValueVO.setQuickShow(0);
+                        return productAttrValueVO;
+                    }
+            ).collect(Collectors.toList());
+            this.productAttrValueService.saveBatch(productAttrValueEntitie);
+        }
+    }
+    //保存图片信息
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveSpuDesc(SpuInfoVO spuInfoVO) {
+        SpuInfoDescEntity spuInfoDescEntity = new SpuInfoDescEntity();
+        spuInfoDescEntity.setSpuId(spuInfoVO.getId());
+        spuInfoDescEntity.setDecript(StringUtils.join(spuInfoVO.getSpuImages(),","));
+        this.spuInfoDescDao.insert(spuInfoDescEntity);
+    }
+
+    public void saveSpuInfo(SpuInfoVO spuInfoVO) {
+        //1.保存spuinfo
+        spuInfoVO.setPublishStatus(1);//默认是已经上架了的
+        spuInfoVO.setCreateTime(new Date());
+        spuInfoVO.setUodateTime(spuInfoVO.getCreateTime());
+        this.save(spuInfoVO);
     }
 
 }
