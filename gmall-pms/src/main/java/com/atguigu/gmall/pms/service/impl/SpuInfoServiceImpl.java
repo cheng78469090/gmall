@@ -12,6 +12,7 @@ import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.feign.GmallSmsClient;
 import com.atguigu.gmall.pms.service.*;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -85,19 +86,20 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
      * 保存信息方法
      * @param spuInfoVO
      */
-    @Transactional
+    @GlobalTransactional
     @Override
     public void saveSuInfoVo(SpuInfoVO spuInfoVO) {
         this.saveSpuInfo(spuInfoVO);
-        //获取新增后的spuid
-        //保存spu的商品描述信息
-        this.spuInfoDescService.saveSpuDesc(spuInfoVO);
-        //1.3保存spu的规格参数信息desc信息
-        int a=10/0;
-        this.saveBaseAttrs(spuInfoVO);
-        this.saveSkuInfoWithSaleInfo(spuInfoVO);
-    }
 
+        this.spuInfoDescService.saveSpuDesc(spuInfoVO);
+
+        this.saveBaseAttrs(spuInfoVO);
+
+        this.saveSkuInfoWithSaleInfo(spuInfoVO);
+
+
+    }
+    @Transactional
     public void saveSkuInfoWithSaleInfo(SpuInfoVO spuInfoVO) {
         /// 2. 保存sku相关信息
         List<SkuInfoVO> skuInfoVOs = spuInfoVO.getSkus();
@@ -161,7 +163,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             this.smsClient.saveSales(saleVO);
         });
     }
-
+    @Transactional
     public void saveBaseAttrs(SpuInfoVO spuInfoVO) {
         List<ProductAttrValueVO> baseAttrs = spuInfoVO.getBaseAttrs();
         if (!CollectionUtils.isEmpty(baseAttrs)){
@@ -184,7 +186,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         spuInfoDescEntity.setDecript(StringUtils.join(spuInfoVO.getSpuImages(),","));
         this.spuInfoDescDao.insert(spuInfoDescEntity);
     }
-
+    @Transactional
     public void saveSpuInfo(SpuInfoVO spuInfoVO) {
         //1.保存spuinfo
         spuInfoVO.setPublishStatus(1);//默认是已经上架了的
