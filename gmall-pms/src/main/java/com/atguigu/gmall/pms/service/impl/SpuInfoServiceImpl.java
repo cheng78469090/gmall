@@ -151,10 +151,6 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             });
             this.skuSaleAttrValueService.saveBatch(saleAttrs);
 
-
-
-
-
             // 3. 保存营销相关信息，需要远程调用gmall-sms
             // 3.1. 积分优惠
             SkuSaleVo saleVO = new SkuSaleVo();

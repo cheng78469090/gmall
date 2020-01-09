@@ -54,7 +54,7 @@ public class SkuBoundsServiceImpl extends ServiceImpl<SkuBoundsDao, SkuBoundsEnt
             skuBoundsEntity.setWork(work.get(0) * 8 + work.get(1) * 4 + work.get(2) * 2 + work.get(3));
         }
         this.save(skuBoundsEntity);
-        int a=10/0;
+
         // 3.2. 满减优惠
         SkuFullReductionEntity skuFullReductionEntity = new SkuFullReductionEntity();
         BeanUtils.copyProperties(skuSaleDTO, skuFullReductionEntity);

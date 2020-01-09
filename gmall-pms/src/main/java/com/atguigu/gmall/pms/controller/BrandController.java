@@ -54,7 +54,6 @@ public class BrandController {
     @PreAuthorize("hasAuthority('pms:brand:info')")
     public Resp<BrandEntity> info(@PathVariable("brandId") Long brandId){
 		BrandEntity brand = brandService.getById(brandId);
-
         return Resp.ok(brand);
     }
 
