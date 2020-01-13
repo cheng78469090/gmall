@@ -33,6 +33,7 @@ class GmallSearchApplicationTests {
     private GmallWmsClint wmsClint;
 
 
+
     @Test
     void contextLoads() {
         this.restTemplate.createIndex(Goods.class);
@@ -82,7 +83,7 @@ class GmallSearchApplicationTests {
                             goods.setStore(wareSkuEntityList.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock()>0));
                         }
                         //添加分类名称
-                        Resp<CategoryEntity> categoryEntityResp = this.pmsClint.queryCategoryNameById(skuInfoEntity.getBrandId());
+                        Resp<CategoryEntity> categoryEntityResp = this.pmsClint.queryCategoryNameById(skuInfoEntity.getCatalogId());
                         CategoryEntity categoryEntity = categoryEntityResp.getData();
                         if (categoryEntity!=null){
                             goods.setCategoryName(categoryEntity.getName());

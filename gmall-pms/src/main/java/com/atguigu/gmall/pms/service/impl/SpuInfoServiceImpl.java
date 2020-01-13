@@ -13,6 +13,7 @@ import com.atguigu.gmall.pms.feign.GmallSmsClient;
 import com.atguigu.gmall.pms.service.*;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import io.seata.spring.annotation.GlobalTransactional;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     private GmallSmsClient smsClient;
     @Autowired
     private SpuInfoDescService spuInfoDescService;
+    @Autowired
+    private AmqpTemplate amqpTemplate;
     @Override
     public PageVo queryPage(QueryCondition params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -96,9 +99,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         this.saveBaseAttrs(spuInfoVO);
 
         this.saveSkuInfoWithSaleInfo(spuInfoVO);
+        sendMsg(spuInfoVO,"insert");
 
 
     }
+
+    private void sendMsg(SpuInfoVO spuInfoVO,String type) {
+        this.amqpTemplate.convertAndSend("GMALL-PMS-EXCHANGE","item."+type,spuInfoVO.getId());
+    }
+
     @Transactional
     public void saveSkuInfoWithSaleInfo(SpuInfoVO spuInfoVO) {
         /// 2. 保存sku相关信息
@@ -130,6 +139,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             // 2.2. 保存sku图片信息
             if (!CollectionUtils.isEmpty(images)){
                 String defaultImage = images.get(0);
+                System.out.println("图片信息:"+defaultImage);
                 List<SkuImagesEntity> skuImageses = images.stream().map(image -> {
                     SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
                     skuImagesEntity.setDefaultImg(StringUtils.equals(defaultImage, image) ? 1 : 0);

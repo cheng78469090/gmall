@@ -4,10 +4,9 @@ import com.atguigu.core.bean.PageVo;
 import com.atguigu.core.bean.QueryCondition;
 import com.atguigu.core.bean.Resp;
 import com.atguigu.gmall.pms.entity.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import com.atguigu.gmall.pms.vo.CategoryVo;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,4 +37,15 @@ public interface GmallPmsApi {
     public Resp<List<ProductAttrValueEntity>> querySearchAttrValue(
             @PathVariable("spuId")Long spuId
     );
+
+    @GetMapping("pms/skuinfo/info/{id}")
+    public Resp<SpuInfoEntity> QuerySpuByIdCreateTime(@PathVariable("id") Long id);
+
+    @GetMapping("pms/category")
+    public Resp<List<CategoryEntity>> queryCategoryByLeve(
+            @RequestParam(value = "level",defaultValue = "0")Integer level,
+            @RequestParam(value = "parentCid",required = false)Long parentCid
+    );
+    @GetMapping("pms/category/{pid}")
+    public Resp<List<CategoryVo>> queryCategoriesWithSub(@PathVariable("pid")Long pid);
 }
